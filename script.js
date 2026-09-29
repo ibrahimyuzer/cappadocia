@@ -21,6 +21,7 @@ const browserLang=(navigator.languages||[navigator.language||'id']).map(l=>l.toL
 setLanguage(strings[saved]?saved:(browserLang||'id'));
 language.addEventListener('change',e=>setLanguage(e.target.value));
 document.getElementById('year').textContent=new Date().getFullYear();
+document.querySelectorAll('.brand-logo img').forEach(img=>img.addEventListener('error',()=>{img.hidden=true;if(img.closest('.gofood-logo'))img.nextElementSibling.style.display='inline'}));
 fetch('menu/menu.pdf',{method:'HEAD'}).then(r=>{if(!r.ok||!r.headers.get('content-type')?.includes('pdf'))return;menuAvailable=true;menuLink.href='menu/menu.pdf';menuLink.target='_blank';menuLink.textContent=strings[language.value].openMenu}).catch(()=>{});
 
 // Optional official Places integration; default links remain useful if it is not configured.
@@ -34,7 +35,8 @@ async function loadGoogleContent(){
     try{
       const {Place}=await google.maps.importLibrary('places');
       const place=new Place({id:config.googlePlaceId});
-      await place.fetchFields({fields:['displayName','reviews','photos','googleMapsLinks']});
+      await place.fetchFields({fields:['displayName','reviews','photos','googleMapsLinks','rating','userRatingCount']});
+      if(place.rating){const badge=document.getElementById('rating-summary');badge.textContent=`★ ${place.rating.toFixed(1)} / 5 · ${place.userRatingCount||''} Google Maps`;badge.hidden=false}
       const reviews=place.reviews||[];
       if(reviews.length){
         const list=document.getElementById('reviews-list');list.replaceChildren();
